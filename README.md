@@ -6,11 +6,11 @@ ADD:ON公式サイト。v10 UIをベースに、ADYGTA2公開リポジトリの�
 
 - `index.html` — トップ、現在の配信、ZERO紹介、応募案内
 - `projects.html` — 企画一覧
-- `project-zero.html` — ZERO概要・コンテンツタブ
-- `project-adygta.html` — 過去企画ADYGTAの紹介・職業フィルター
+- `project-zero.html` — ZEROの紹介・遊び方・職業一覧・PV
+- `project-adygta.html` — 過去企画ADYGTAの紹介・ADYGTA2のPV
 - `streams.html` — YouTube/Twitch LIVE一覧・プラットフォーム別絞り込み・手動更新
 - `adiyon.html` — 運営母体紹介
-- `apply.html` — 応募案内（現在準備中）
+- `apply.html` — 常設応募の案内と応募フォーム
 
 ## 配信表示の仕組み（ADYGTA2との共通仕様）
 
