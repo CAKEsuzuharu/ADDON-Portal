@@ -282,18 +282,21 @@ body[data-page="home"] .desktop-nav [data-nav="home"],body[data-page="projects"]
 }
 
 .footer-notice {
-  border-top: 1px solid var(--line-strong);
-  padding-block: 18px 24px;
-  color: #c3cfc1;
-  font-size: .875rem;
+  border-top: 1px solid var(--line);
+  padding-block: 16px 24px;
+  color: #a6b4a4;
+  text-align: right;
+  font-size: .8125rem;
   line-height: 1.7;
 }
 .footer-notice p {margin: 0}
-.footer-operator {display: flex; flex-wrap: wrap; column-gap: 20px; row-gap: 2px}
-.footer-notice p + p {margin-top: 3px}
-.footer-notice strong {color: var(--text)}
+.footer-operator {display: flex; flex-wrap: wrap; justify-content: flex-end; column-gap: 18px; row-gap: 2px}
 .footer-operator > span {min-width: 0}
-.footer-notice a {color: var(--green-soft); text-decoration: underline; text-underline-offset: .2em; overflow-wrap: anywhere}
+.footer-notice strong {color: #c6d3c4}
+.footer-notice a {color: #b8cdb0; text-decoration: underline; text-underline-offset: .2em; overflow-wrap: anywhere}
+.footer-disclaimer {max-width: 56rem; margin: 10px 0 0 auto}
+.footer-disclaimer h2 {margin: 0 0 4px; color: #c6d3c4; font-size: inherit}
+.footer-disclaimer p + p {margin-top: 2px}
 
 /* Project videos */
 .project-videos {background: #161f18; border-block: 1px solid var(--line)}
@@ -383,10 +386,6 @@ body[data-page="home"] .desktop-nav [data-nav="home"],body[data-page="projects"]
   .reveal-ready .pv-card:nth-child(2) {transition-delay: .12s}
 
   .home-hero .hero-grid, .detail-hero-zero::before {animation: hero-grid-in 1.35s var(--ease) both}
-  .home-hero .hero-side, .detail-hero-zero .detail-hero-art {
-    translate: var(--hero-x, 0px) var(--hero-y, 0px);
-    transition: translate .55s var(--ease);
-  }
   .home-hero .hero-scan, .detail-hero-zero .hero-scan {animation: hero-frame-in .85s .1s var(--ease) both}
   .hero-scan::after {animation: hero-sweep 1.15s .26s var(--ease) both}
   .hero-content h1, .detail-hero-zero .detail-hero-art img {animation: hero-logo-in .92s .14s var(--ease) both}

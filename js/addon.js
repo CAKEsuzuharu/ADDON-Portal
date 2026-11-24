@@ -2,7 +2,6 @@
   'use strict';
   const $ = (s, root = document) => root.querySelector(s);
   const $$ = (s, root = document) => [...root.querySelectorAll(s)];
-  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 
   // Shared navigation: responsive, keyboard accessible, and leaves body scroll alone when closed.
   const header = $('#header');
@@ -54,27 +53,6 @@
     }, { threshold: 0.07, rootMargin: '0px 0px -20px 0px' });
     document.documentElement.classList.add('reveal-ready');
     $$('[data-reveal]').forEach(e => observer.observe(e));
-  }
-
-  const hero = $('[data-hero-motion]');
-  if (hero && matchMedia('(hover: hover) and (pointer: fine)').matches) {
-    let frame = 0;
-    const resetHero = () => {
-      cancelAnimationFrame(frame);
-      hero.style.removeProperty('--hero-x');
-      hero.style.removeProperty('--hero-y');
-    };
-    hero.addEventListener('pointermove', ({clientX, clientY}) => {
-      if (reducedMotion.matches) return;
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => {
-        const bounds = hero.getBoundingClientRect();
-        hero.style.setProperty('--hero-x', `${((clientX - bounds.left) / bounds.width - .5) * 24}px`);
-        hero.style.setProperty('--hero-y', `${((clientY - bounds.top) / bounds.height - .5) * 18}px`);
-      });
-    }, { passive: true });
-    hero.addEventListener('pointerleave', resetHero);
-    reducedMotion.addEventListener('change', resetHero);
   }
 
   // Keep the local poster in place until the visitor starts the embedded PV.
