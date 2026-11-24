@@ -9,11 +9,17 @@
   // The monitoring source must be configured separately to cover the current ADD:ON participants.
   const API = 'https://api.adygta2.jp/streams';
   const MAX_AGE_MS = 30 * 60 * 1000;
+  const HOME_STREAM_LIMIT = 8;
   const counter = document.querySelector('#liveTotal');
   const viewersTotal = document.querySelector('#totalViewers');
   const checked = document.querySelector('#checkedAt');
   const refresh = document.querySelector('#refreshStreams');
   const buttons = [...document.querySelectorAll('[data-filter]')];
+  const directoryLink = document.querySelector('#streamDirectoryLink');
+  const controls = document.querySelector('#streamControls');
+  const previous = document.querySelector('#streamPrevious');
+  const next = document.querySelector('#streamNext');
+  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 
   let streams = [];
   let activeFilter = 'all';
@@ -54,6 +60,51 @@
   const message = (msg, error = false) => `<div class="empty-state" role="status">` +
     `<span class="status-dot ${error ? 'inactive' : ''}" aria-hidden="true"></span><p>${esc(msg)}</p></div>`;
 
+  function updateHomeControls() {
+    const max = home.scrollWidth - home.clientWidth;
+    controls.hidden = max <= 1;
+    previous.setAttribute('aria-disabled', String(home.scrollLeft <= 1));
+    next.setAttribute('aria-disabled', String(home.scrollLeft >= max - 1));
+  }
+
+  function scrollHome(button, direction) {
+    if (button.getAttribute('aria-disabled') === 'true') return;
+    const [first, second] = home.children;
+    const step = second.offsetLeft - first.offsetLeft;
+    home.scrollBy({
+      left: direction * step,
+      behavior: reducedMotion.matches ? 'instant' : 'smooth'
+    });
+  }
+
+  if (home) {
+    previous.addEventListener('click', () => scrollHome(previous, -1));
+    next.addEventListener('click', () => scrollHome(next, 1));
+    home.addEventListener('scroll', updateHomeControls, { passive: true });
+    window.addEventListener('resize', updateHomeControls);
+  }
+
+  let homeMarkup = '';
+  function renderHome(live) {
+    const showMore = live.length >= HOME_STREAM_LIMIT;
+    let markup = live.length
+      ? live.slice(0, HOME_STREAM_LIMIT).map(card).join('')
+      : message(errorMessage || '現在配信中のメンバーはいません。', !!errorMessage);
+    if (showMore) {
+      markup += '<a class="stream-more" href="streams.html" aria-label="配信一覧をもっと見る">もっと見る</a>';
+    }
+
+    if (markup !== homeMarkup) {
+      const position = home.scrollLeft;
+      home.classList.toggle('has-streams', live.length > 0);
+      home.innerHTML = markup;
+      home.scrollLeft = position;
+      homeMarkup = markup;
+    }
+    directoryLink.hidden = showMore;
+    updateHomeControls();
+  }
+
   function render() {
     const live = streams.filter(s => isLive(s) && platformOf(s));
     const filtered = live.filter(s => activeFilter === 'all' || platformOf(s) === activeFilter);
@@ -63,7 +114,7 @@
       ? '現在配信中のメンバーはいません。'
       : `${activeFilter === 'youtube' ? 'YouTube' : 'Twitch'}で現在配信中のメンバーはいません。`);
     if (grid) grid.innerHTML = filtered.length ? filtered.map(card).join('') : message(empty, !!errorMessage);
-    if (home) home.innerHTML = live.length ? live.slice(0, 3).map(card).join('') : message(errorMessage || '現在配信中のメンバーはいません。', !!errorMessage);
+    if (home) renderHome(live);
   }
 
   buttons.forEach(button => button.addEventListener('click', () => {
