@@ -3,13 +3,15 @@
 
   const grid = document.querySelector('#streamListGrid');
   const home = document.querySelector('#streamGrid');
-  if (!grid && !home) return;
+  const streamGrid = grid || home;
+  if (!streamGrid) return;
 
   // The same live monitoring API as ADYGTA2; no duplicate polling Worker/cron here.
   // The monitoring source must be configured separately to cover the current ADD:ON participants.
   const API = 'https://api.adygta2.jp/streams';
   const MAX_AGE_MS = 30 * 60 * 1000;
   const HOME_STREAM_LIMIT = 8;
+  const CARD_REVEAL_STEP_MS = 38;
   const counter = document.querySelector('#liveTotal');
   const viewersTotal = document.querySelector('#totalViewers');
   const checked = document.querySelector('#checkedAt');
@@ -42,20 +44,21 @@
     } catch { return ''; }
   };
 
-  const card = s => {
+  const card = (s, index) => {
     const url = safeUrl(s.url);
     const img = safeUrl(s.image);
     const platform = platformOf(s);
     const name = esc(s.name || s.channel || '配信中');
     const title = esc(s.title || '');
     const viewers = number(s.viewers).toLocaleString('ja-JP');
+    const delay = Math.min(index, 12) * CARD_REVEAL_STEP_MS;
     const thumb = img ? `<img src="${esc(img)}" alt="" loading="lazy" decoding="async">` : '';
     const inner = `<div class="stream-image">${thumb}<span class="stream-live">LIVE</span></div>` +
       `<div class="stream-info"><span class="stream-platform">${platform === 'youtube' ? 'YOUTUBE' : 'TWITCH'}</span>` +
       `<h3>${name}</h3><p>${title}</p><small>${viewers}人が視聴中</small></div>`;
     return url
-      ? `<a class="stream-card" href="${esc(url)}" target="_blank" rel="noopener noreferrer">${inner}</a>`
-      : `<article class="stream-card">${inner}</article>`;
+      ? `<a class="stream-card" style="--stream-delay: ${delay}ms" href="${esc(url)}" target="_blank" rel="noopener noreferrer">${inner}</a>`
+      : `<article class="stream-card" style="--stream-delay: ${delay}ms">${inner}</article>`;
   };
   const message = (msg, error = false) => `<div class="empty-state" role="status">` +
     `<span class="status-dot ${error ? 'inactive' : ''}" aria-hidden="true"></span><p>${esc(msg)}</p></div>`;
@@ -84,28 +87,55 @@
     window.addEventListener('resize', updateHomeControls);
   }
 
-  let homeMarkup = '';
+  const revealObserver = typeof IntersectionObserver === 'function'
+    ? new IntersectionObserver(entries => {
+      if (!entries.some(entry => entry.isIntersecting)) return;
+      if (!streamGrid.classList.contains('stream-reveal-pending')) return;
+      streamGrid.classList.remove('stream-reveal-pending');
+      streamGrid.classList.add('stream-revealing');
+      revealObserver.unobserve(streamGrid);
+    }, {rootMargin: '0px 0px -18px'})
+    : null;
+  let renderedMarkup = '';
+  let hadCards = false;
+
+  function renderCards(markup, hasCards, replay = false) {
+    if (markup === renderedMarkup) return;
+    const pending = streamGrid.classList.contains('stream-reveal-pending');
+    const reveal = hasCards && !reducedMotion.matches && (!hadCards || pending || replay);
+    revealObserver?.unobserve(streamGrid);
+    streamGrid.classList.remove('stream-reveal-pending', 'stream-revealing');
+
+    const position = home?.scrollLeft;
+    home?.classList.toggle('has-streams', hasCards);
+    streamGrid.innerHTML = markup;
+    if (home) home.scrollLeft = position;
+    renderedMarkup = markup;
+    hadCards = hasCards;
+
+    if (reveal && revealObserver) {
+      streamGrid.classList.add('stream-reveal-pending');
+      revealObserver.observe(streamGrid);
+    } else if (reveal) {
+      streamGrid.classList.add('stream-revealing');
+    }
+  }
+
   function renderHome(live) {
     const showMore = live.length >= HOME_STREAM_LIMIT;
     let markup = live.length
       ? live.slice(0, HOME_STREAM_LIMIT).map(card).join('')
       : message(errorMessage || '現在配信中のメンバーはいません。', !!errorMessage);
     if (showMore) {
-      markup += '<a class="stream-more" href="streams.html" aria-label="配信一覧をもっと見る">もっと見る</a>';
+      markup += `<a class="stream-more" style="--stream-delay: ${HOME_STREAM_LIMIT * CARD_REVEAL_STEP_MS}ms" href="streams.html" aria-label="配信一覧をもっと見る">もっと見る</a>`;
     }
 
-    if (markup !== homeMarkup) {
-      const position = home.scrollLeft;
-      home.classList.toggle('has-streams', live.length > 0);
-      home.innerHTML = markup;
-      home.scrollLeft = position;
-      homeMarkup = markup;
-    }
+    renderCards(markup, live.length > 0);
     directoryLink.hidden = showMore;
     updateHomeControls();
   }
 
-  function render() {
+  function render(replay = false) {
     const live = streams.filter(s => isLive(s) && platformOf(s));
     const filtered = live.filter(s => activeFilter === 'all' || platformOf(s) === activeFilter);
     if (counter) counter.textContent = String(live.length);
@@ -113,18 +143,22 @@
     const empty = errorMessage || (activeFilter === 'all'
       ? '現在配信中のメンバーはいません。'
       : `${activeFilter === 'youtube' ? 'YouTube' : 'Twitch'}で現在配信中のメンバーはいません。`);
-    if (grid) grid.innerHTML = filtered.length ? filtered.map(card).join('') : message(empty, !!errorMessage);
+    if (grid) {
+      renderCards(filtered.length ? filtered.map(card).join('') : message(empty, !!errorMessage), filtered.length > 0, replay);
+    }
     if (home) renderHome(live);
   }
 
   buttons.forEach(button => button.addEventListener('click', () => {
-    activeFilter = button.dataset.filter || 'all';
+    const filter = button.dataset.filter || 'all';
+    const changed = activeFilter !== filter;
+    activeFilter = filter;
     buttons.forEach(b => {
       const selected = b === button;
       b.classList.toggle('is-active', selected);
       b.setAttribute('aria-pressed', String(selected));
     });
-    render();
+    render(changed);
   }));
 
   async function update() {

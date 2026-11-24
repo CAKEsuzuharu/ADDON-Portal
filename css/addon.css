@@ -94,16 +94,17 @@ body[data-page="home"] .desktop-nav [data-nav="home"],body[data-page="projects"]
 .feature-option.is-active .feature-opt-arrow {color: var(--green-soft); transform: rotate(45deg)}
 .feature-option:focus-visible, .feature-panel:focus-visible {outline-offset: -3px}
 
-.feature-detail {min-width: 0}
+.feature-detail {display: grid; grid-template-columns: minmax(0, 1fr); min-width: 0}
 .feature-panel {
   --feature-accent: #ade58a;
+  grid-area: 1 / 1;
   position: relative;
   display: flex;
-  min-height: 100%;
   isolation: isolate;
   background: radial-gradient(ellipse at 88% 5%, color-mix(in srgb, var(--feature-accent) 12%, transparent), transparent 58%), #111a14;
 }
-.feature-panel[hidden] {display: none}
+/* Keep the tallest panel, including its link, in the shared grid track. */
+.feature-panel[hidden] {display: flex; visibility: hidden}
 #feature-panel-2 {--feature-accent: #ffad91}
 #feature-panel-3 {--feature-accent: #efcf8d}
 #feature-panel-4 {--feature-accent: #c6b8fc}
@@ -307,7 +308,7 @@ body[data-page="home"] .desktop-nav [data-nav="home"],body[data-page="projects"]
   margin: 0;
 }
 .footer-operator dt {color: #c6d3c4; font-weight: 700; text-align: left}
-.footer-operator dd {margin: 0; text-align: right}
+.footer-operator dd {margin: 0; text-align: left}
 
 @media (max-width: 680px) {
   .footer-notice {grid-template-columns: minmax(0, 1fr); row-gap: 14px}
@@ -414,10 +415,26 @@ body[data-page="home"] .desktop-nav [data-nav="home"],body[data-page="projects"]
   .detail-hero-zero .detail-actions .action-link:nth-child(2) {animation-delay: .42s}
   .detail-hero-zero .detail-actions .action-link:nth-child(3) {animation-delay: .50s}
 
-  .feature-panel.is-active .feature-panel-info {animation: portal-rise .42s var(--ease) both}
-  .feature-panel.is-active .feature-facts > div {animation: portal-rise .48s .06s var(--ease) both}
-  .feature-panel.is-active .feature-facts > div:nth-child(2) {animation-delay: .10s}
-  .feature-panel.is-active .feature-facts > div:nth-child(3) {animation-delay: .14s}
+  .feature-panel.is-active .feature-panel-info > :where(h3, p, .feature-panel-link),
+  .feature-panel.is-active .feature-facts > div {animation: feature-item-in .42s var(--ease) both}
+  .feature-panel.is-active .feature-panel-info > p {animation-delay: 50ms}
+  .feature-panel.is-active .feature-facts > div {animation-delay: 100ms}
+  .feature-panel.is-active .feature-facts > div:nth-child(2) {animation-delay: 160ms}
+  .feature-panel.is-active .feature-facts > div:nth-child(3) {animation-delay: 220ms}
+  .feature-panel.is-active .feature-panel-link {animation-delay: 275ms}
+
+  .stream-reveal-pending > :is(.stream-card, .stream-more):not(:focus-within) {opacity: 0}
+  .stream-revealing > :is(.stream-card, .stream-more):not(:focus-within) {
+    animation: stream-card-in .36s var(--ease) var(--stream-delay, 0ms) both;
+  }
+}
+@keyframes feature-item-in {
+  from {opacity: 0; transform: translateY(16px)}
+  to {opacity: 1; transform: none}
+}
+@keyframes stream-card-in {
+  from {opacity: 0; transform: translate(-8px, -12px) scale(.98)}
+  to {opacity: 1; transform: none}
 }
 @keyframes portal-rise {
   from {opacity: 0; transform: translateY(14px)}
