@@ -2,7 +2,7 @@
   'use strict';
   const $ = (s, root = document) => root.querySelector(s);
   const $$ = (s, root = document) => [...root.querySelectorAll(s)];
-  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 
   // Shared navigation: responsive, keyboard accessible, and leaves body scroll alone when closed.
   const header = $('#header');
@@ -43,8 +43,8 @@
   addEventListener('scroll', onScroll, { passive: true });
   onScroll();
 
-  // Short one-way reveals: never hide content for reduced-motion or unsupported observers.
-  if (!reduced && 'IntersectionObserver' in window) {
+  // Only start hiding reveal targets when an observer can show them again.
+  if ('IntersectionObserver' in window) {
     const observer = new IntersectionObserver(entries => {
       for (const e of entries) {
         if (!e.isIntersecting) continue;
@@ -52,12 +52,53 @@
         observer.unobserve(e.target);
       }
     }, { threshold: 0.07, rootMargin: '0px 0px -20px 0px' });
+    document.documentElement.classList.add('reveal-ready');
     $$('[data-reveal]').forEach(e => observer.observe(e));
-  } else $$('[data-reveal]').forEach(e => e.classList.add('is-visible'));
+  }
+
+  const hero = $('[data-hero-motion]');
+  if (hero && matchMedia('(hover: hover) and (pointer: fine)').matches) {
+    let frame = 0;
+    const resetHero = () => {
+      cancelAnimationFrame(frame);
+      hero.style.removeProperty('--hero-x');
+      hero.style.removeProperty('--hero-y');
+    };
+    hero.addEventListener('pointermove', ({clientX, clientY}) => {
+      if (reducedMotion.matches) return;
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        const bounds = hero.getBoundingClientRect();
+        hero.style.setProperty('--hero-x', `${((clientX - bounds.left) / bounds.width - .5) * 24}px`);
+        hero.style.setProperty('--hero-y', `${((clientY - bounds.top) / bounds.height - .5) * 18}px`);
+      });
+    }, { passive: true });
+    hero.addEventListener('pointerleave', resetHero);
+    reducedMotion.addEventListener('change', resetHero);
+  }
+
+  // Keep the local poster in place until the visitor starts the embedded PV.
+  $$('[data-video-id]').forEach(cover => cover.addEventListener('click', event => {
+    if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    const player = document.createElement('iframe');
+    player.src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(cover.dataset.videoId)}?autoplay=1&playsinline=1`;
+    player.title = cover.dataset.videoTitle;
+    player.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+    player.allowFullscreen = true;
+    player.referrerPolicy = 'strict-origin-when-cross-origin';
+    cover.replaceWith(player);
+    player.focus();
+  }));
 
   // Real feature tabs in ADD:ON ZERO project details.
   const featureTabs = $$('[data-feature]');
   if (featureTabs.length) {
+    const compactTabs = matchMedia('(max-width: 590px)');
+    const tabList = featureTabs[0].parentElement;
+    const syncTabOrientation = () => tabList.setAttribute('aria-orientation', compactTabs.matches ? 'horizontal' : 'vertical');
+    syncTabOrientation();
+    compactTabs.addEventListener('change', syncTabOrientation);
     const setFeature = (index, focus = false) => {
       featureTabs.forEach((tab, i) => {
         const active = i === index;
@@ -67,25 +108,28 @@
         const panel = document.getElementById(tab.getAttribute('aria-controls'));
         if (panel) { panel.hidden = !active; panel.classList.toggle('is-active', active); }
       });
-      if (focus) featureTabs[index]?.focus();
+      if (focus) featureTabs[index].focus();
     };
     featureTabs.forEach((tab, i) => {
       tab.addEventListener('click', () => setFeature(i));
       tab.addEventListener('keydown', e => {
         let target;
-        if (e.key === 'ArrowDown' || e.key === 'ArrowRight') target = (i + 1) % featureTabs.length;
-        if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') target = (i - 1 + featureTabs.length) % featureTabs.length;
+        const rowStep = compactTabs.matches ? 2 : 1;
+        if (e.key === 'ArrowDown') target = i + rowStep;
+        if (e.key === 'ArrowUp') target = i - rowStep;
+        if (e.key === 'ArrowRight') target = i + 1;
+        if (e.key === 'ArrowLeft') target = i - 1;
         if (e.key === 'Home') target = 0;
         if (e.key === 'End') target = featureTabs.length - 1;
         if (target === undefined) return;
         e.preventDefault();
-        setFeature(target, true);
+        setFeature((target + featureTabs.length) % featureTabs.length, true);
       });
     });
     setFeature(0);
   }
 
-  // ADYGTA job-type filters: purely presentational, no contents lost in the source.
+  // Job-type filters keep the full directory in the page.
   const jobButtons = $$('[data-job-filter]');
   if (jobButtons.length) {
     const groups = $$('[data-job-group]');
