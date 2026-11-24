@@ -282,21 +282,28 @@ body[data-page="home"] .desktop-nav [data-nav="home"],body[data-page="projects"]
 }
 
 .footer-notice {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) max-content;
+  align-items: start;
+  gap: 20px clamp(20px, 4vw, 56px);
   border-top: 1px solid var(--line);
   padding-block: 16px 24px;
   color: #a6b4a4;
-  text-align: right;
   font-size: .8125rem;
   line-height: 1.7;
 }
 .footer-notice p {margin: 0}
-.footer-operator {display: flex; flex-wrap: wrap; justify-content: flex-end; column-gap: 18px; row-gap: 2px}
-.footer-operator > span {min-width: 0}
-.footer-notice strong {color: #c6d3c4}
 .footer-notice a {color: #b8cdb0; text-decoration: underline; text-underline-offset: .2em; overflow-wrap: anywhere}
-.footer-disclaimer {max-width: 56rem; margin: 10px 0 0 auto}
+.footer-disclaimer {max-width: 56rem; text-align: left}
 .footer-disclaimer h2 {margin: 0 0 4px; color: #c6d3c4; font-size: inherit}
 .footer-disclaimer p + p {margin-top: 2px}
+.footer-operator {min-width: 0; text-align: right}
+.footer-operator p + p {margin-top: 4px}
+.footer-operator strong {color: #c6d3c4; margin-inline-end: .4em}
+
+@media (max-width: 680px) {
+  .footer-notice {grid-template-columns: minmax(0, 1fr); row-gap: 14px}
+}
 
 /* Project videos */
 .project-videos {background: #161f18; border-block: 1px solid var(--line)}
@@ -433,4 +440,109 @@ body[data-page="home"] .desktop-nav [data-nav="home"],body[data-page="projects"]
   .hero-bottom-type span, .pv-cover img, .pv-play {transition: none}
   .hero-bottom-type:hover span, .pv-cover:hover img,
   .pv-cover:hover .pv-play, .pv-cover:focus-visible .pv-play {transform: none}
+}
+
+/* First visit in a browser tab */
+.portal-welcome {display: none}
+
+@media (prefers-reduced-motion: no-preference) {
+  .portal-welcoming .portal-welcome {
+    display: grid;
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    isolation: isolate;
+    place-items: center;
+    overflow: hidden;
+    pointer-events: none;
+    background: radial-gradient(ellipse at 50% 42%, #253f23, #0c160e 57%, #070c09 88%);
+    animation: portal-welcome-exit 1.55s both;
+  }
+
+  .portal-welcome::before,
+  .portal-welcome::after {
+    content: "";
+    position: absolute;
+    pointer-events: none;
+  }
+
+  .portal-welcome::before {
+    z-index: -1;
+    inset: 0;
+    background:
+      repeating-linear-gradient(90deg, #b7eb9821 0 1px, transparent 1px 54px),
+      repeating-linear-gradient(0deg, #b7eb9821 0 1px, transparent 1px 54px);
+    mask-image: radial-gradient(ellipse at center, black, transparent 79%);
+    animation: welcome-grid .8s var(--ease) both;
+  }
+
+  .portal-welcome::after {
+    inset: 0;
+    background: linear-gradient(112deg, transparent 42%, #82dc3f42 49.6%, #c2f598b3 50%, transparent 50.5%, transparent);
+    animation: welcome-light .95s .12s var(--ease) both;
+  }
+
+  .portal-welcome-brand {
+    position: relative;
+    width: min(76vw, 540px, 77svh);
+    aspect-ratio: 1365 / 932;
+    background: url('../assets/zero-display.png') center / contain no-repeat;
+    animation: welcome-logo .79s .12s var(--ease) both;
+  }
+
+  .portal-welcome-brand::before {
+    content: "";
+    position: absolute;
+    inset: -4% -6%;
+    border-block: 1px solid #a9eb8333;
+    background:
+      linear-gradient(90deg, #b2ef88, transparent) top left / 60px 1px no-repeat,
+      linear-gradient(#b2ef88, transparent) top left / 1px 30px no-repeat,
+      linear-gradient(270deg, #b2ef88, transparent) bottom right / 60px 1px no-repeat,
+      linear-gradient(0deg, #b2ef88, transparent) bottom right / 1px 30px no-repeat;
+  }
+}
+
+@keyframes welcome-grid {
+  from {opacity: 0; transform: scale(1.08)}
+  to {opacity: 1; transform: none}
+}
+@keyframes welcome-light {
+  from {opacity: 0; transform: translateX(-65%)}
+  36% {opacity: 1}
+  to {opacity: 0; transform: translateX(65%)}
+}
+@keyframes welcome-logo {
+  from {opacity: 0; clip-path: polygon(-10% -10%, 7% -10%, -10% 22%, -10% 110%); scale: .95}
+  26% {opacity: .85}
+  to {opacity: 1; clip-path: polygon(-10% -10%, 110% -10%, 110% 110%, -10% 110%); scale: 1}
+}
+@keyframes portal-welcome-exit {
+  0%, 64% {opacity: 1; clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%)}
+  100% {opacity: 0; clip-path: polygon(0 0, 100% 0, 100% 4%, 0 30%); visibility: hidden}
+}
+
+/* Use more of the viewport on portrait displays */
+@media (max-aspect-ratio: 4/5) {
+  .container {width: min(var(--content), calc(100% - clamp(22px, 5vw, 44px)))}
+  .portal-welcome-brand {width: min(86vw, 620px, 77svh)}
+
+  .home-hero-inner {
+    grid-template-columns: minmax(0, 1fr);
+    min-height: clamp(470px, 70svh, 740px);
+    padding-block: 40px;
+  }
+  .home-hero .hero-content {max-width: none; text-align: center}
+  .home-hero .hero-rule {margin-inline: auto}
+  .home-hero .hero-content h1 {margin: 12px 0 4px}
+  .home-hero .zero-main-logo {
+    width: min(100%, 720px);
+    max-height: clamp(235px, 42svh, 480px);
+    margin-inline: auto;
+    object-position: center;
+  }
+  .home-hero .hero-copy {max-width: 37rem; margin-inline: auto}
+  .home-hero .hero-buttons {max-width: 36rem; margin-inline: auto; justify-content: center}
+  .home-hero .hero-buttons .action-link {flex: 1 1 0; min-width: 0; gap: 8px; padding-inline: 12px}
+  .home-hero .hero-side {position: absolute; inset: 0 0 0 auto; width: 62%; z-index: -1; opacity: .3}
 }
