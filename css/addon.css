@@ -103,7 +103,7 @@ body[data-page="home"] .desktop-nav [data-nav="home"],body[data-page="projects"]
   isolation: isolate;
   background: radial-gradient(ellipse at 88% 5%, color-mix(in srgb, var(--feature-accent) 12%, transparent), transparent 58%), #111a14;
 }
-/* Keep the tallest panel, including its link, in the shared grid track. */
+/* Let the tallest panel determine the shared grid track. */
 .feature-panel[hidden] {display: flex; visibility: hidden}
 #feature-panel-2 {--feature-accent: #ffad91}
 #feature-panel-3 {--feature-accent: #efcf8d}
@@ -135,8 +135,6 @@ body[data-page="home"] .desktop-nav [data-nav="home"],body[data-page="projects"]
 .feature-facts > div {padding: 14px; background: #0e1612; border: 1px solid var(--line); border-top-color: color-mix(in srgb, var(--feature-accent) 48%, transparent)}
 .feature-facts dt {margin-bottom: 6px; font-weight: 800; color: var(--text)}
 .feature-facts dd {margin: 0; color: var(--secondary); font-size: .875rem; line-height: 1.7}
-.feature-panel-link {display: inline-flex; align-items: center; min-height: 44px; margin-top: 14px; color: var(--green-soft); text-decoration: underline; text-underline-offset: .25em; font-weight: 800}
-.feature-panel-link:hover {color: #fff}
 
 .detail-cta-inner{border-top:1px solid var(--line-strong);padding:45px 0 0;display:flex;justify-content:space-between;align-items:center;gap:35px}.detail-cta h2{font-size:clamp(29px,3.6vw,43px);margin:12px 0 10px;letter-spacing:-.05em}.detail-cta p{color:var(--muted);margin:0}.detail-cta .action-link{flex:none}
 /* Job directory */
@@ -401,6 +399,34 @@ body[data-page="home"] .desktop-nav [data-nav="home"],body[data-page="projects"]
   .reveal-ready [data-reveal]:focus-within {opacity: 1; transform: none}
   .reveal-ready .pv-card:nth-child(2) {transition-delay: .12s}
 
+  .page-banner::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(105deg, #a9e78424, transparent 76%);
+    animation: page-light-in .9s var(--ease) both;
+  }
+  .page-banner::after,
+  .detail-hero::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 0;
+    height: 1px;
+    pointer-events: none;
+    background: linear-gradient(90deg, var(--green), transparent 80%);
+    transform-origin: left;
+    animation: page-line-in .78s .08s var(--ease) both;
+  }
+  .page-banner .banner-grid, .detail-hero-ady::before {animation: hero-grid-in .95s var(--ease) both}
+  .banner-inner > .eyebrow,
+  .detail-hero-content > .eyebrow {animation: portal-rise .5s .02s var(--ease) both}
+  .banner-inner > h1,
+  .detail-hero-ady .detail-hero-content > h1 {animation: page-title-in .64s .09s var(--ease) both}
+  .banner-inner > p,
+  .detail-hero-ady .detail-hero-content > p {animation: portal-rise .56s .21s var(--ease) both}
+  .detail-hero-ady .detail-hero-art {animation: portal-rise .75s .06s var(--ease) both}
+
   .home-hero .hero-grid, .detail-hero-zero::before {animation: hero-grid-in 1.35s var(--ease) both}
   .home-hero .hero-scan, .detail-hero-zero .hero-scan {animation: hero-frame-in .85s .1s var(--ease) both}
   .hero-scan::after {animation: hero-sweep 1.15s .26s var(--ease) both}
@@ -415,26 +441,39 @@ body[data-page="home"] .desktop-nav [data-nav="home"],body[data-page="projects"]
   .detail-hero-zero .detail-actions .action-link:nth-child(2) {animation-delay: .42s}
   .detail-hero-zero .detail-actions .action-link:nth-child(3) {animation-delay: .50s}
 
-  .feature-panel.is-active .feature-panel-info > :where(h3, p, .feature-panel-link),
+  .feature-panel.is-active .feature-panel-info > :where(h3, p),
   .feature-panel.is-active .feature-facts > div {animation: feature-item-in .42s var(--ease) both}
   .feature-panel.is-active .feature-panel-info > p {animation-delay: 50ms}
   .feature-panel.is-active .feature-facts > div {animation-delay: 100ms}
   .feature-panel.is-active .feature-facts > div:nth-child(2) {animation-delay: 160ms}
   .feature-panel.is-active .feature-facts > div:nth-child(3) {animation-delay: 220ms}
-  .feature-panel.is-active .feature-panel-link {animation-delay: 275ms}
 
   .stream-reveal-pending > :is(.stream-card, .stream-more):not(:focus-within) {opacity: 0}
   .stream-revealing > :is(.stream-card, .stream-more):not(:focus-within) {
-    animation: stream-card-in .36s var(--ease) var(--stream-delay, 0ms) both;
+    animation: stream-card-fade .25s ease-out var(--stream-delay, 0ms) both;
   }
+}
+@keyframes page-light-in {
+  from {opacity: 0; transform: translateX(-16%)}
+  42% {opacity: .82}
+  to {opacity: .27; transform: none}
+}
+@keyframes page-line-in {
+  from {opacity: 0; transform: scaleX(.09)}
+  40% {opacity: .85}
+  to {opacity: .36; transform: scaleX(1)}
+}
+@keyframes page-title-in {
+  from {opacity: 0; clip-path: inset(100% -12% 0); transform: translateY(18px)}
+  to {opacity: 1; clip-path: inset(-15% -12% -15%); transform: none}
 }
 @keyframes feature-item-in {
   from {opacity: 0; transform: translateY(16px)}
   to {opacity: 1; transform: none}
 }
-@keyframes stream-card-in {
-  from {opacity: 0; transform: translate(-8px, -12px) scale(.98)}
-  to {opacity: 1; transform: none}
+@keyframes stream-card-fade {
+  from {opacity: 0}
+  to {opacity: 1}
 }
 @keyframes portal-rise {
   from {opacity: 0; transform: translateY(14px)}

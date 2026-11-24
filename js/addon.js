@@ -42,6 +42,19 @@
   addEventListener('scroll', onScroll, { passive: true });
   onScroll();
 
+  // History restoration reuses the page and its finished CSS animations.
+  const pageIntro = $('main > .page-banner, main > .detail-hero');
+  if (pageIntro?.getAnimations) {
+    addEventListener('pageshow', event => {
+      if (!event.persisted) return;
+      for (const animation of pageIntro.getAnimations({subtree: true})) {
+        if (!('animationName' in animation) || animation.effect?.getTiming().iterations !== 1) continue;
+        animation.currentTime = 0;
+        animation.play();
+      }
+    });
+  }
+
   // Only start hiding reveal targets when an observer can show them again.
   if ('IntersectionObserver' in window) {
     const observer = new IntersectionObserver(entries => {

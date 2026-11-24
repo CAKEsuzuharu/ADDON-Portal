@@ -11,7 +11,7 @@
   const API = 'https://api.adygta2.jp/streams';
   const MAX_AGE_MS = 30 * 60 * 1000;
   const HOME_STREAM_LIMIT = 8;
-  const CARD_REVEAL_STEP_MS = 38;
+  const CARD_REVEAL_STEP_MS = 20;
   const counter = document.querySelector('#liveTotal');
   const viewersTotal = document.querySelector('#totalViewers');
   const checked = document.querySelector('#checkedAt');
