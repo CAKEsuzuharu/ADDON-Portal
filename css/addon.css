@@ -507,6 +507,8 @@ body.menu-open{overflow:hidden}a{color:inherit;text-decoration:none}button{font:
 
 @media (max-width: 680px) {
   .footer-notice {grid-template-columns: minmax(0, 1fr); row-gap: 14px}
+  .footer-disclaimer h2 {text-align: center}
+  .footer-operator {justify-self: center; width: max-content; max-width: 100%}
 }
 
 /* Project videos */
