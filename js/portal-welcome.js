@@ -1,6 +1,17 @@
 (() => {
   'use strict';
 
+  // Head script: restore a clicked mobile menu before the destination paints.
+  try {
+    const key = 'addon-mobile-nav-target';
+    const destination = sessionStorage.getItem(key);
+    sessionStorage.removeItem(key);
+    if (destination && destination === location.pathname + location.search &&
+        matchMedia('(max-width: 820px)').matches) {
+      document.documentElement.classList.add('mobile-nav-arrival');
+    }
+  } catch { /* Storage can be unavailable; normal navigation is unaffected. */ }
+
   if (!matchMedia('(prefers-reduced-motion: no-preference)').matches) return;
 
   const sessionKey = 'addon-portal-welcome-seen';

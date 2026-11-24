@@ -16,9 +16,37 @@
     menu.inert = !open;
     document.body.classList.toggle('menu-open', open);
   };
-  setMenu(false);
+  // Keep the menu over the outgoing document while a link navigates.
+  // The next page restores it briefly and animates its exit over NEW content.
+  const arrivingFromMobileNav = document.documentElement.classList.contains('mobile-nav-arrival');
+  setMenu(arrivingFromMobileNav);
+  if (arrivingFromMobileNav) {
+    const finishArrival = () => {
+      setMenu(false);
+      document.documentElement.classList.remove('mobile-nav-arrival');
+    };
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) finishArrival();
+    else requestAnimationFrame(() => requestAnimationFrame(finishArrival));
+  }
   menuButton?.addEventListener('click', () => setMenu(menuButton.getAttribute('aria-expanded') !== 'true'));
-  $$('#mobileNav a').forEach(a => a.addEventListener('click', () => setMenu(false)));
+  $('#mobileNav a').forEach(link => link.addEventListener('click', event => {
+    if (event.defaultPrevented || event.button !== 0 || event.ctrlKey || event.metaKey ||
+        event.shiftKey || event.altKey || link.target === '_blank' || link.hasAttribute('download')) return;
+    const next = new URL(link.href, location.href);
+    if (next.origin !== location.origin || (next.pathname === location.pathname && next.search === location.search)) {
+      setMenu(false);
+      return;
+    }
+    try { sessionStorage.setItem('addon-mobile-nav-target', next.pathname + next.search); }
+    catch { /* Navigation works normally without session storage. */ }
+    // Do NOT close on the outgoing page.
+  }));
+  addEventListener('pageshow', e => {
+    if (e.persisted) {
+      document.documentElement.classList.remove('mobile-nav-arrival');
+      setMenu(false);
+    }
+  });
   addEventListener('keydown', e => {
     if (e.key === 'Escape' && menuButton?.getAttribute('aria-expanded') === 'true') {
       setMenu(false);
