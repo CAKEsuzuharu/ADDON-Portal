@@ -297,9 +297,17 @@ body[data-page="home"] .desktop-nav [data-nav="home"],body[data-page="projects"]
 .footer-disclaimer {max-width: 56rem; text-align: left}
 .footer-disclaimer h2 {margin: 0 0 4px; color: #c6d3c4; font-size: inherit}
 .footer-disclaimer p + p {margin-top: 2px}
-.footer-operator {min-width: 0; text-align: right}
-.footer-operator p + p {margin-top: 4px}
-.footer-operator strong {color: #c6d3c4; margin-inline-end: .4em}
+.footer-operator {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  justify-self: end;
+  min-width: 0;
+  max-width: 100%;
+  gap: 4px 12px;
+  margin: 0;
+}
+.footer-operator dt {color: #c6d3c4; font-weight: 700; text-align: left}
+.footer-operator dd {margin: 0; text-align: right}
 
 @media (max-width: 680px) {
   .footer-notice {grid-template-columns: minmax(0, 1fr); row-gap: 14px}
