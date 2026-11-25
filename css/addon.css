@@ -889,45 +889,15 @@ body.menu-open{overflow:hidden}a{color:inherit;text-decoration:none}button{font:
 }
 
 
-/* STREAM PLATFORM THEMES + JOB FILTER */
-/* 配信ページとトップのカードは媒体色を共有。職業フィルタは配信ページのみ。 */
-.stream-card {
-  position: relative;
-  display: block;
-  isolation: isolate;
-  transition: border-color .22s ease, background .22s ease, box-shadow .22s ease, transform .22s ease;
-}
-.stream-card--twitch {
+/* STREAM PLATFORM TAGS + JOB FILTER */
+/* カードは全媒体共通の落ち着いた背景・枠線を維持し、媒体タグのみ色分け。 */
+.stream-card--twitch .stream-platform {
   --stream-accent: #c4a0ff;
   --stream-accent-rgb: 145, 70, 255;
-  border-color: rgba(145,70,255,.26);
-  background: linear-gradient(145deg,rgba(145,70,255,.095),transparent 65%),#13121b;
 }
-.stream-card--youtube {
+.stream-card--youtube .stream-platform {
   --stream-accent: #ff7084;
   --stream-accent-rgb: 255, 36, 67;
-  border-color: rgba(255,36,67,.26);
-  background: linear-gradient(145deg,rgba(255,36,67,.08),transparent 65%),#1b1216;
-}
-.stream-card:is(:hover,:focus-visible) {
-  border-color: rgba(var(--stream-accent-rgb),.68);
-  background: linear-gradient(145deg,rgba(var(--stream-accent-rgb),.16),transparent 75%),#17191c;
-  box-shadow: 0 10px 28px rgba(0,0,0,.17),0 0 0 1px rgba(var(--stream-accent-rgb),.09);
-  transform: translateY(-2px);
-}
-.stream-card:focus-visible {outline:2px solid var(--stream-accent);outline-offset:2px}
-.stream-card::before {
-  content: "";position:absolute;left:0;top:0;right:0;height:2px;z-index:3;pointer-events:none;
-  background:linear-gradient(90deg,rgba(var(--stream-accent-rgb),.88),rgba(var(--stream-accent-rgb),.13) 72%,transparent);
-}
-.stream-card .stream-image {background:linear-gradient(130deg,rgba(var(--stream-accent-rgb),.23),#0f1116 75%)}
-.stream-card .stream-image::after {
-  content:"";position:absolute;inset:0;pointer-events:none;
-  background:linear-gradient(0deg,rgba(var(--stream-accent-rgb),.13),transparent 55%);
-}
-.stream-card .stream-live {
-  z-index:2;background:rgba(var(--stream-accent-rgb),.94);
-  border:1px solid rgba(255,255,255,.22);box-shadow:0 3px 14px rgba(0,0,0,.25);
 }
 .stream-meta {
   display:flex;align-items:center;align-content:flex-start;flex-wrap:wrap;
