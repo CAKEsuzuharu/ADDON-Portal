@@ -38,6 +38,7 @@
   const jobRolesOf = (stream) => Array.isArray(stream?.roles)
     ? [...new Set(stream.roles.filter(role => typeof role === 'string').map(role => role.trim()).filter(Boolean))].slice(0, 15)
     : [];
+  const roleDisplayName = role => role === '非正規メカニック' ? '非正規メカ' : role;
 
   const esc = value => String(value ?? '').replace(/[&<>"']/g, ch => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
@@ -65,7 +66,7 @@
     const delay = Math.min(index, 12) * CARD_REVEAL_STEP_MS;
     const thumb = img ? `<img src="${esc(img)}" alt="" loading="lazy" decoding="async">` : '';
     const roles = jobRolesOf(s);
-    const jobLabels = roles.map(role => `<span class="stream-role" title="職業: ${esc(role)}">${esc(role)}</span>`).join('');
+    const jobLabels = roles.map(role => `<span class="stream-role" title="職業: ${esc(role)}">${esc(roleDisplayName(role))}</span>`).join('');
     const inner = `<div class="stream-image">${thumb}<span class="stream-live">LIVE</span></div>` +
       `<div class="stream-info"><div class="stream-meta"><span class="stream-platform">${platform === 'youtube' ? 'YOUTUBE' : 'TWITCH'}</span>${jobLabels}</div>` +
       `<h3>${name}</h3><p>${title}</p><small>${viewers}人が視聴中</small></div>`;
@@ -180,7 +181,7 @@
     const previous = roleFilter.value;
     roleFilter.replaceChildren(
       new Option('すべての職業', ''),
-      ...roles.map(role => new Option(role, role))
+      ...roles.map(role => new Option(roleDisplayName(role), role))
     );
     roleFilter.value = roles.includes(previous) ? previous : '';
     activeRole = roleFilter.value;
