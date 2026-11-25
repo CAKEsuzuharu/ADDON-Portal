@@ -23,7 +23,6 @@
   const filterPanel = grid ? document.querySelector('#streamFilterPanel') : null;
   const filterCount = grid ? document.querySelector('#streamFilterCount') : null;
   const filterReset = grid ? document.querySelector('#streamFilterReset') : null;
-  const directoryLink = document.querySelector('#streamDirectoryLink');
   const controls = document.querySelector('#streamControls');
   const previous = document.querySelector('#streamPrevious');
   const next = document.querySelector('#streamNext');
@@ -137,16 +136,13 @@
   }
 
   function renderHome(live) {
-    const showMore = live.length >= HOME_STREAM_LIMIT;
-    let markup = live.length
+    // 「もっと見る」は常に見える見出し横のリンクを利用する。
+    // 横スクロールの末尾には置かず、カードは最大8件のまま表示。
+    const markup = live.length
       ? live.slice(0, HOME_STREAM_LIMIT).map(card).join('')
       : message(errorMessage || '現在配信中のメンバーはいません。', !!errorMessage);
-    if (showMore) {
-      markup += `<a class="stream-more" style="--stream-delay: ${HOME_STREAM_LIMIT * CARD_REVEAL_STEP_MS}ms" href="streams.html" aria-label="配信一覧をもっと見る">もっと見る</a>`;
-    }
 
     renderCards(markup, live.length > 0);
-    directoryLink.hidden = showMore;
     updateHomeControls();
   }
 
