@@ -17,7 +17,6 @@
   const viewersTotal = document.querySelector('#totalViewers');
   const checked = document.querySelector('#checkedAt');
   const refresh = document.querySelector('#refreshStreams');
-  const buttons = [...document.querySelectorAll('[data-filter]')];
   const roleFilter = grid ? document.querySelector('#streamRoleFilter') : null;
   const filterMenu = grid ? document.querySelector('#streamFilterMenu') : null;
   const filterToggle = grid ? document.querySelector('#streamFilterToggle') : null;
@@ -29,7 +28,6 @@
   const homeFooter = home ? document.querySelector('.home-stream-footer') : null;
 
   let streams = [];
-  let activeFilter = 'all';
   let activeRole = '';
   let errorMessage = '';
   let inFlight = false;
@@ -129,7 +127,7 @@
 
   function updateFilterIndicator() {
     if (!filterToggle) return;
-    const count = Number(activeFilter !== 'all') + Number(Boolean(activeRole));
+    const count = Number(Boolean(activeRole));
     filterToggle.classList.toggle('has-active-filters', count > 0);
     filterToggle.setAttribute('aria-label', count
       ? `フィルター（適用中の条件 ${count}件）`
@@ -167,17 +165,12 @@
 
   function render(replay = false) {
     const live = streams.filter(s => isLive(s) && platformOf(s));
-    const filtered = live.filter(s =>
-      (activeFilter === 'all' || platformOf(s) === activeFilter) &&
-      (!activeRole || jobRolesOf(s).includes(activeRole))
-    );
+    const filtered = live.filter(s => !activeRole || jobRolesOf(s).includes(activeRole));
     if (counter) counter.textContent = String(live.length);
     if (viewersTotal) viewersTotal.textContent = live.reduce((sum, s) => sum + number(s.viewers), 0).toLocaleString('ja-JP');
     const empty = errorMessage || (activeRole
       ? `${activeRole}に該当する配信は現在ありません。`
-      : activeFilter === 'all'
-        ? '現在配信中のメンバーはいません。'
-        : `${activeFilter === 'youtube' ? 'YouTube' : 'Twitch'}で現在配信中のメンバーはいません。`);
+      : '現在配信中のメンバーはいません。');
     if (grid) {
       renderCards(filtered.length ? filtered.map(card).join('') : message(empty, !!errorMessage), filtered.length > 0, replay);
     }
@@ -193,31 +186,12 @@
     render(true);
   });
 
-  buttons.forEach(button => button.addEventListener('click', () => {
-    const filter = button.dataset.filter || 'all';
-    const changed = activeFilter !== filter;
-    activeFilter = filter;
-    buttons.forEach(b => {
-      const selected = b === button;
-      b.classList.toggle('is-active', selected);
-      b.setAttribute('aria-pressed', String(selected));
-    });
-    updateFilterIndicator();
-    render(changed);
-  }));
-
   filterToggle?.addEventListener('click', () => {
     setFilterPanelOpen(filterPanel?.hidden);
   });
   filterReset?.addEventListener('click', () => {
-    activeFilter = 'all';
     activeRole = '';
     if (roleFilter) roleFilter.value = '';
-    buttons.forEach(b => {
-      const isAll = b.dataset.filter === 'all';
-      b.classList.toggle('is-active', isAll);
-      b.setAttribute('aria-pressed', String(isAll));
-    });
     updateFilterIndicator();
     render(true);
   });
