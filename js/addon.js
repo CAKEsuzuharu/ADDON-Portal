@@ -29,7 +29,7 @@
     else requestAnimationFrame(() => requestAnimationFrame(finishArrival));
   }
   menuButton?.addEventListener('click', () => setMenu(menuButton.getAttribute('aria-expanded') !== 'true'));
-  $('#mobileNav a').forEach(link => link.addEventListener('click', event => {
+  $$('#mobileNav a').forEach(link => link.addEventListener('click', event => {
     if (event.defaultPrevented || event.button !== 0 || event.ctrlKey || event.metaKey ||
         event.shiftKey || event.altKey || link.target === '_blank' || link.hasAttribute('download')) return;
     const next = new URL(link.href, location.href);
