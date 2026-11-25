@@ -1,56 +1,29 @@
-# Streamer job roles: Discord Bot → Google Sheets → ADD:ON Portal
+# ADD:ON 配信カードの職業情報 — 既存Worker統合方式
 
-This feature uses the existing live stream API unchanged. The Discord Bot
-writes job role labels in `streamers.roles`, and a separate scheduled GitHub
-Action publishes only that safe, public subset as `data/streamer-roles.json`.
+## データフロー
 
-## Sheet columns
+1. `ADDON-Portal-Bot` リポジトリのDiscord Botが30分ごとに、対象サーバーの選択ロールをGoogle Sheetsの `streamers!E:E` (`roles`) に更新する
+2. 配信監視の既存Cloudflare Worker `adygta-streams` が、従来と同じ `GOOGLE_SHEET_CSV_URL` で `streamers` 一覧を取得する。CSV列は `enabled,name,platform,id,roles`
+3. Workerが `platform + channel ID` によりロールを配信データへ統合し、既存 `STREAMS_KV` の `streams` に保存する
+4. 公式サイトの `js/portal-streams.js` は `https://api.adygta2.jp/streams` に含まれる `streams[].roles` を直接表示する
 
-`streamers`: `enabled | name | platform | id | roles`
+`roles` は例として `["警察", "救急隊"]`。空のときは `[]`。
 
-Example for one streamer:
-`TRUE | Player Name | twitch | twitch_login | 警察,救急隊`
+## 既存Workerのデプロイは別途必要
 
-`settings` is a `key | value` sheet. Add these rows:
+**2026年11月25日現在、サイト側は上記APIの `roles` を表示するように変更済みだが、Cloudflareの現行Workerにはこちらからアクセス・デプロイできていない。** Workerが `roles` を返すまで職業タグは表示されない。
 
-| key | value example |
-| --- | --- |
-| rolesEnabled | TRUE |
-| rolesSourceSpreadsheetUrl | https://docs.google.com/spreadsheets/d/YOUR_SOURCE_ID/edit |
-| rolesSourceSheetName | ZERO |
-| rolesSourceNameColumn | B |
-| rolesSourceDiscordColumn | D |
-| rolesSourceDiscordLookup | username |\n| rolesSourceHeaderRow | 1 |
-| rolesGuildId | YOUR_DISCORD_GUILD_ID |
-| rolesRoleIds | JOB_ROLE_ID_1,JOB_ROLE_ID_2 |
+Worker側では以下の2箇所だけ変更する。
 
-For the current ADD:ON participant info sheet, column D is a Discord **username**, not a numerical user ID. Use `rolesSourceDiscordLookup=username` and enable the Discord `GuildMembers` intent in both the Bot and Developer Portal. Leave `rolesEnabled=FALSE` until guild ID, role IDs and credentials have been configured. The supplied
-integration module must be installed in an already-running discord.js v14 Bot;
-the Bot needs a Google service account with READ permission for the source
-sheet and EDIT permission for the sheet containing `streamers`/`settings`.
+- `loadConfigFromSheets` のCSVマッピングに `roles` を追加
+- `updateStreams` の出力で、配信データと元CSVのロール情報を `platform + ID` で結び付ける
 
-Do not store Discord Bot tokens or service-account keys in a Google Sheet.
+現行Workerを丸ごと過去のソースに戻さないこと。YouTube Shard / RSS改修・KV構成・Cron・認証を維持しながら差分適用する。
 
-## Site publishing setup
+## 配信者の行ずれについて
 
-1. In this repository's GitHub Actions secrets, set `STREAMERS_CSV_URL` to
-   the HTTPS CSV export/published URL of **only the streamers tab**.
-   The streamers tab must contain no private email addresses or Discord user IDs.
-2. Run the `Publish streamer job roles` workflow manually in GitHub Actions.
-   The workflow also checks automatically every 10 minutes (not a guaranteed
-   real-time interval). If the secret is absent, it skips safely.
-3. The workflow updates `data/streamer-roles.json` only if role labels changed.
-   Cloudflare Pages redeploys after the commit. The browser rechecks this JSON
-   about every 90 seconds and merges it by `name + platform` with the existing
-   stream API response.
-4. Rows without a job role display a regular stream card with no badge.
+Workerでの配信者とロールの統合はCSVの同じ行から取得した `platform + id` を利用し、Worker内の並べ替えではずれない。一方、**Botが `streamers!E` に書き込む瞬間に別の処理がA:Dを並べ替えたり再作成したりすると、Bot側の更新が行ずれする可能性は残る**。配信者インポート処理ではE列を消さず、並べ替えや更新をBotと同時に行わないこと。
 
-## Important: existing Apps Script importer
+## 旧方式について
 
-If another Apps Script periodically recreates `streamers`, ensure it updates
-only the `enabled/name/platform/id` columns (typically A:D) and does **not**
-clear the `roles` column (typically E). Otherwise the Bot's values will be
-lost after each import and badge visibility will fluctuate.
-
-Without a connected target sheet or the existing Bot source, the Bot itself
-cannot be deployed or its credentials configured by this repository update.
+`data/streamer-roles.json` と `scripts/publish-streamer-roles.mjs` を使用した別GitHub Actionsでの公開方法は使わない。新しいWorker・追加GitHub Secretsも不要。**配信監視Workerの `GOOGLE_SHEET_CSV_URL` が現在の「ADD:ON サイト用情報」スプレッドシートの `streamers` タブを指していること**を確認する。
