@@ -983,3 +983,96 @@ body.menu-open{overflow:hidden}a{color:inherit;text-decoration:none}button{font:
 @media(prefers-reduced-motion:reduce) {
   .stream-card:is(:hover,:focus-visible) {transform:none}
 }
+
+
+/* STREAM FILTER POPOVER V3 */
+.stream-toolbar-actions {gap:10px}
+.stream-filter-menu {position:relative;flex:none;z-index:15}
+.stream-filter-toggle {
+  min-height:38px;display:inline-flex;align-items:center;justify-content:center;gap:9px;
+  padding:7px 14px 7px 12px;border:1px solid var(--line-strong);border-radius:5px;
+  background:linear-gradient(130deg,rgba(127,204,86,.10),rgba(127,204,86,.025)),#111a13;
+  color:#dcebd7;font:800 12px/1.3 var(--font);
+  transition:border-color .18s,background .18s,box-shadow .18s;
+}
+.stream-filter-toggle:hover,.stream-filter-menu.is-open .stream-filter-toggle {
+  border-color:rgba(137,213,85,.65);background:#20331e;
+}
+.stream-filter-toggle.has-active-filters {
+  color:#e4ffd5;border-color:rgba(134,207,72,.60);
+  box-shadow:inset 0 0 0 1px rgba(134,207,72,.08);
+}
+.stream-filter-glyph {display:flex;flex-direction:column;justify-content:center;gap:3px;width:15px;height:16px;color:var(--green-soft)}
+.stream-filter-glyph i {position:relative;display:block;width:100%;height:1px;background:currentColor;opacity:.88}
+.stream-filter-glyph i::after {
+  content:"";position:absolute;top:-2px;left:3px;width:5px;height:5px;
+  background:#192b16;border:1px solid var(--green-soft);border-radius:50%;
+}
+.stream-filter-glyph i:nth-child(2)::after {left:9px}
+.stream-filter-glyph i:nth-child(3)::after {left:5px}
+.stream-filter-caret {
+  width:7px;height:7px;margin:0 1px 3px 2px;flex:none;
+  border-right:1.5px solid #9db798;border-bottom:1.5px solid #9db798;
+  transform:rotate(45deg);transition:transform .2s,margin .2s;
+}
+.stream-filter-menu.is-open .stream-filter-caret {transform:rotate(225deg);margin:4px 1px -1px 2px}
+.stream-filter-count {
+  display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 4px;border-radius:5px;
+  background:#79cc3b;color:#11210c;font:900 10px/1 ui-monospace,monospace;
+}
+.stream-filter-count[hidden] {display:none}
+.stream-filter-panel {
+  position:absolute;top:calc(100% + 10px);right:0;z-index:30;
+  width:min(340px,calc(100vw - 36px));padding:17px;
+  border:1px solid rgba(141,198,112,.38);border-radius:8px;
+  background:linear-gradient(145deg,rgba(77,127,58,.11),transparent 58%),#121b14;
+  box-shadow:0 18px 48px rgba(0,0,0,.43),0 2px 10px rgba(0,0,0,.19);
+}
+.stream-filter-panel[hidden] {display:none}
+.stream-filter-panel::before {
+  content:"";position:absolute;top:-6px;right:21px;width:10px;height:10px;
+  transform:rotate(45deg);background:#1b2b1a;border-top:1px solid rgba(141,198,112,.38);
+  border-left:1px solid rgba(141,198,112,.38);
+}
+.stream-filter-panel-head {display:flex;align-items:center;justify-content:space-between;gap:15px;padding-bottom:13px;border-bottom:1px solid var(--line)}
+.stream-filter-panel-head strong {font-size:13px;letter-spacing:.01em;color:#ebf7e7}
+.stream-filter-reset {padding:5px 8px;border:0;border-radius:4px;background:transparent;color:#a0bb96;font-size:11px;font-weight:700}
+.stream-filter-reset:hover,.stream-filter-reset:focus-visible {background:#2b4026;color:#e2ffcf}
+.stream-filter-field {display:block;margin-top:15px}
+.stream-filter-field-label,.stream-filter-panel .stream-role-filter>span {
+  display:block;margin-bottom:8px;color:#a7bca0;font-size:11px;font-weight:800;letter-spacing:.04em;
+}
+.stream-filter-panel .stream-filters {
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;width:100%;
+}
+.stream-filter-panel .stream-filters button {
+  min-width:0;min-height:36px;border-radius:5px;padding:7px 5px;
+  border:1px solid rgba(151,185,142,.17);
+  background:#18221a;color:#acbba8;font-size:11px;
+}
+.stream-filter-panel .stream-filters button.is-active {color:#dcf8c8;border-color:rgba(121,204,59,.47);background:#2a4424}
+.stream-filter-panel .stream-filters button[data-filter="twitch"].is-active {color:#e4caff;border-color:rgba(145,70,255,.54);background:rgba(145,70,255,.23)}
+.stream-filter-panel .stream-filters button[data-filter="youtube"].is-active {color:#ffccd1;border-color:rgba(255,36,67,.54);background:rgba(255,36,67,.19)}
+.stream-filter-panel .stream-role-filter {display:block;margin:16px 0 0;min-width:0;width:100%}
+.stream-filter-panel .stream-role-filter select {
+  display:block;min-width:0;max-width:none;width:100%;height:38px;
+  padding:8px 34px 8px 12px;border-radius:5px;border-color:rgba(151,185,142,.26);
+}
+.stream-filter-panel .stream-role-filter::after {top:auto;bottom:16px}
+@media(max-width:680px) {
+  .stream-toolbar-actions {width:100%;justify-content:flex-end;gap:9px}
+  .stream-filter-menu {flex:none}
+  .stream-refresh {margin-left:0}
+}
+
+/* ADD:ONグリーンの職業チップ。媒体ラベルの隣、狭いカードでは同じメタ行内で折り返す。 */
+.stream-meta {gap:4px;margin-bottom:5px}
+.stream-meta .stream-platform {padding:2px 5px;gap:4px;font-size:9.5px;letter-spacing:.02em}
+.stream-meta .stream-role {
+  display:inline-flex;align-items:center;flex:0 0 auto;max-width:100%;
+  overflow:visible;text-overflow:clip;white-space:nowrap;
+  padding:2px 5px;margin:0;border:1px solid rgba(143,222,89,.68);border-radius:4px;
+  background:linear-gradient(125deg,#406f2e,#2a4d24);
+  color:#e4ffd0;font:800 9.5px/1.55 var(--font);letter-spacing:-.02em;
+  box-shadow:inset 0 1px 0 rgba(218,255,187,.13);
+}
