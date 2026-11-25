@@ -1103,3 +1103,58 @@ body.menu-open{overflow:hidden}a{color:inherit;text-decoration:none}button{font:
 @media(prefers-reduced-motion:no-preference) {
   .home-stream-more:hover {transform:translateY(-1px)}
 }
+
+
+/* HOME STREAM FIFTH GRID TILE */
+.home-stream-footer[hidden] {display:none}
+.home-stream-directory-card {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  min-width:0;
+  min-height:100%;
+  padding:16px 10px;
+  border:1px solid var(--line-strong);
+  border-radius:var(--radius);
+  background:
+    linear-gradient(135deg,rgba(121,204,59,.09),transparent 75%),
+    #111a14;
+  color:#e3eedc;
+  text-align:center;
+  overflow:hidden;
+  transition:border-color .22s ease,background-color .22s ease,transform .22s ease;
+}
+.home-stream-directory-icon {
+  display:grid;place-items:center;
+  width:38px;height:38px;margin-bottom:5px;
+  border:1px solid rgba(121,204,59,.32);border-radius:50%;
+  background:rgba(121,204,59,.065);
+  color:var(--green-soft);
+  font-size:21px;line-height:1;
+  transition:background-color .22s ease,transform .22s ease;
+}
+.home-stream-directory-title {
+  font-size:14px;font-weight:800;line-height:1.45;letter-spacing:.01em;
+}
+.home-stream-directory-caption {
+  font-size:10px;font-weight:600;line-height:1.4;color:#8ea48a;
+}
+.home-stream-directory-card:is(:hover,:focus-visible) {
+  border-color:rgba(121,204,59,.62);
+  background-color:#19251a;
+  transform:translateY(-2px);
+}
+.home-stream-directory-card:is(:hover,:focus-visible) .home-stream-directory-icon {
+  background:rgba(121,204,59,.14);
+  transform:translate(2px,-2px);
+}
+.home-stream-directory-card:focus-visible {outline:2px solid var(--green);outline-offset:3px}
+@media (max-width:680px) {
+  .home-stream-directory-card {display:none}
+}
+@media (prefers-reduced-motion:reduce) {
+  .home-stream-directory-card:is(:hover,:focus-visible),
+  .home-stream-directory-card:is(:hover,:focus-visible) .home-stream-directory-icon {transform:none}
+}
