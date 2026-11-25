@@ -17,6 +17,7 @@
   const checked = document.querySelector('#checkedAt');
   const refresh = document.querySelector('#refreshStreams');
   const buttons = [...document.querySelectorAll('[data-filter]')];
+  const roleFilter = grid ? document.querySelector('#streamRoleFilter') : null;
   const directoryLink = document.querySelector('#streamDirectoryLink');
   const controls = document.querySelector('#streamControls');
   const previous = document.querySelector('#streamPrevious');
@@ -25,11 +26,12 @@
 
   let streams = [];
   let activeFilter = 'all';
+  let activeRole = '';
   let errorMessage = '';
   let inFlight = false;
   // 職業情報は既存 /streams API の各配信レコード roles[] を利用する。
   const jobRolesOf = (stream) => Array.isArray(stream?.roles)
-    ? stream.roles.filter(role => typeof role === 'string' && role.trim()).slice(0, 15)
+    ? [...new Set(stream.roles.filter(role => typeof role === 'string').map(role => role.trim()).filter(Boolean))].slice(0, 15)
     : [];
 
   const esc = value => String(value ?? '').replace(/[&<>"']/g, ch => ({
@@ -58,15 +60,14 @@
     const delay = Math.min(index, 12) * CARD_REVEAL_STEP_MS;
     const thumb = img ? `<img src="${esc(img)}" alt="" loading="lazy" decoding="async">` : '';
     const roles = jobRolesOf(s);
-    const jobLabels = roles.length
-      ? `<div class="stream-roles" aria-label="ゲーム内の職業">${roles.map(role => `<span class="stream-role">${esc(role)}</span>`).join('')}</div>`
-      : '';
+    const jobLabels = roles.map(role => `<span class="stream-role" title="職業: ${esc(role)}">${esc(role)}</span>`).join('');
     const inner = `<div class="stream-image">${thumb}<span class="stream-live">LIVE</span></div>` +
-      `<div class="stream-info"><span class="stream-platform">${platform === 'youtube' ? 'YOUTUBE' : 'TWITCH'}</span>` +
-      `<h3>${name}</h3>${jobLabels}<p>${title}</p><small>${viewers}人が視聴中</small></div>`;
+      `<div class="stream-info"><div class="stream-meta"><span class="stream-platform">${platform === 'youtube' ? 'YOUTUBE' : 'TWITCH'}</span>${jobLabels}</div>` +
+      `<h3>${name}</h3><p>${title}</p><small>${viewers}人が視聴中</small></div>`;
+    const cardClass = `stream-card stream-card--${platform}`;
     return url
-      ? `<a class="stream-card" style="--stream-delay: ${delay}ms" href="${esc(url)}" target="_blank" rel="noopener noreferrer">${inner}</a>`
-      : `<article class="stream-card" style="--stream-delay: ${delay}ms">${inner}</article>`;
+      ? `<a class="${cardClass}" style="--stream-delay: ${delay}ms" href="${esc(url)}" target="_blank" rel="noopener noreferrer">${inner}</a>`
+      : `<article class="${cardClass}" style="--stream-delay: ${delay}ms">${inner}</article>`;
   };
   const message = (msg, error = false) => `<div class="empty-state" role="status">` +
     `<span class="status-dot ${error ? 'inactive' : ''}" aria-hidden="true"></span><p>${esc(msg)}</p></div>`;
@@ -143,19 +144,45 @@
     updateHomeControls();
   }
 
+  function syncRoleFilter(allRows) {
+    if (!roleFilter) return; // トップページには職業フィルタを設けない
+    const roles = [...new Set(allRows.filter(platformOf).flatMap(jobRolesOf))]
+      .sort((a, b) => a.localeCompare(b, 'ja'));
+    const existing = [...roleFilter.options].slice(1).map(option => option.value);
+    if (existing.length === roles.length && existing.every((role, index) => role === roles[index])) return;
+
+    const previous = roleFilter.value;
+    roleFilter.replaceChildren(
+      new Option('すべての職業', ''),
+      ...roles.map(role => new Option(role, role))
+    );
+    roleFilter.value = roles.includes(previous) ? previous : '';
+    activeRole = roleFilter.value;
+  }
+
   function render(replay = false) {
     const live = streams.filter(s => isLive(s) && platformOf(s));
-    const filtered = live.filter(s => activeFilter === 'all' || platformOf(s) === activeFilter);
+    const filtered = live.filter(s =>
+      (activeFilter === 'all' || platformOf(s) === activeFilter) &&
+      (!activeRole || jobRolesOf(s).includes(activeRole))
+    );
     if (counter) counter.textContent = String(live.length);
     if (viewersTotal) viewersTotal.textContent = live.reduce((sum, s) => sum + number(s.viewers), 0).toLocaleString('ja-JP');
-    const empty = errorMessage || (activeFilter === 'all'
-      ? '現在配信中のメンバーはいません。'
-      : `${activeFilter === 'youtube' ? 'YouTube' : 'Twitch'}で現在配信中のメンバーはいません。`);
+    const empty = errorMessage || (activeRole
+      ? `${activeRole}に該当する配信は現在ありません。`
+      : activeFilter === 'all'
+        ? '現在配信中のメンバーはいません。'
+        : `${activeFilter === 'youtube' ? 'YouTube' : 'Twitch'}で現在配信中のメンバーはいません。`);
     if (grid) {
       renderCards(filtered.length ? filtered.map(card).join('') : message(empty, !!errorMessage), filtered.length > 0, replay);
     }
     if (home) renderHome(live);
   }
+
+  roleFilter?.addEventListener('change', () => {
+    activeRole = roleFilter.value;
+    render(true);
+  });
 
   buttons.forEach(button => button.addEventListener('click', () => {
     const filter = button.dataset.filter || 'all';
@@ -190,6 +217,7 @@
         throw new Error('STALE_STREAMS');
       }
       streams = rows.filter(isLive).filter(platformOf).sort((a, b) => number(b.viewers) - number(a.viewers));
+      syncRoleFilter(rows);
       errorMessage = '';
       if (checked) {
         const date = validTimestamp ? updatedAt : new Date();
