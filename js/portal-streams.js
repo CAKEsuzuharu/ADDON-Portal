@@ -10,7 +10,8 @@
   // The monitoring source must be configured separately to cover the current ADD:ON participants.
   const API = 'https://api.adygta2.jp/streams';
   const MAX_AGE_MS = 30 * 60 * 1000;
-  const HOME_STREAM_LIMIT = 8;
+  const HOME_STREAM_LIMIT_DESKTOP = 5;
+  const HOME_STREAM_LIMIT_MOBILE = 4;
   const CARD_REVEAL_STEP_MS = 20;
   const counter = document.querySelector('#liveTotal');
   const viewersTotal = document.querySelector('#totalViewers');
@@ -23,10 +24,8 @@
   const filterPanel = grid ? document.querySelector('#streamFilterPanel') : null;
   const filterCount = grid ? document.querySelector('#streamFilterCount') : null;
   const filterReset = grid ? document.querySelector('#streamFilterReset') : null;
-  const controls = document.querySelector('#streamControls');
-  const previous = document.querySelector('#streamPrevious');
-  const next = document.querySelector('#streamNext');
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+  const mobileHome = home ? matchMedia('(max-width: 680px)') : null;
 
   let streams = [];
   let activeFilter = 'all';
@@ -77,30 +76,6 @@
   const message = (msg, error = false) => `<div class="empty-state" role="status">` +
     `<span class="status-dot ${error ? 'inactive' : ''}" aria-hidden="true"></span><p>${esc(msg)}</p></div>`;
 
-  function updateHomeControls() {
-    const max = home.scrollWidth - home.clientWidth;
-    controls.hidden = max <= 1;
-    previous.setAttribute('aria-disabled', String(home.scrollLeft <= 1));
-    next.setAttribute('aria-disabled', String(home.scrollLeft >= max - 1));
-  }
-
-  function scrollHome(button, direction) {
-    if (button.getAttribute('aria-disabled') === 'true') return;
-    const [first, second] = home.children;
-    const step = second.offsetLeft - first.offsetLeft;
-    home.scrollBy({
-      left: direction * step,
-      behavior: reducedMotion.matches ? 'instant' : 'smooth'
-    });
-  }
-
-  if (home) {
-    previous.addEventListener('click', () => scrollHome(previous, -1));
-    next.addEventListener('click', () => scrollHome(next, 1));
-    home.addEventListener('scroll', updateHomeControls, { passive: true });
-    window.addEventListener('resize', updateHomeControls);
-  }
-
   const revealObserver = typeof IntersectionObserver === 'function'
     ? new IntersectionObserver(entries => {
       if (!entries.some(entry => entry.isIntersecting)) return;
@@ -120,10 +95,8 @@
     revealObserver?.unobserve(streamGrid);
     streamGrid.classList.remove('stream-reveal-pending', 'stream-revealing');
 
-    const position = home?.scrollLeft;
     home?.classList.toggle('has-streams', hasCards);
     streamGrid.innerHTML = markup;
-    if (home) home.scrollLeft = position;
     renderedMarkup = markup;
     hadCards = hasCards;
 
@@ -136,14 +109,12 @@
   }
 
   function renderHome(live) {
-    // 「もっと見る」は常に見える見出し横のリンクを利用する。
-    // 横スクロールの末尾には置かず、カードは最大8件のまま表示。
+    const limit = mobileHome?.matches ? HOME_STREAM_LIMIT_MOBILE : HOME_STREAM_LIMIT_DESKTOP;
     const markup = live.length
-      ? live.slice(0, HOME_STREAM_LIMIT).map(card).join('')
+      ? live.slice(0, limit).map(card).join('')
       : message(errorMessage || '現在配信中のメンバーはいません。', !!errorMessage);
 
     renderCards(markup, live.length > 0);
-    updateHomeControls();
   }
 
   function updateFilterIndicator() {
@@ -202,6 +173,9 @@
     }
     if (home) renderHome(live);
   }
+
+  // 680pxを跨いだときだけ再描画し、PCは5件・スマホは4件に切り替える。
+  mobileHome?.addEventListener('change', () => render());
 
   roleFilter?.addEventListener('change', () => {
     activeRole = roleFilter.value;
