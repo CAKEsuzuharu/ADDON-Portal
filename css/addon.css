@@ -1046,3 +1046,24 @@ body.menu-open{overflow:hidden}a{color:inherit;text-decoration:none}button{font:
   color:#cbe5b9;font:750 10px/1.55 var(--font);letter-spacing:0;
   box-shadow:none;
 }
+
+
+/* STREAM TOOLBAR UPDATED-AT POSITION */
+.stream-toolbar-actions .stream-updated {
+  margin:0;
+  flex:0 1 auto;
+  color:#899d89;
+  font-size:11px;
+  font-weight:600;
+  line-height:1.5;
+  text-align:right;
+  white-space:nowrap;
+}
+.stream-toolbar-actions .stream-refresh {flex:none;margin-left:0}
+@media(max-width:960px) {
+  .stream-toolbar {flex-wrap:wrap}
+  .stream-toolbar-actions {width:100%;justify-content:flex-end;flex-wrap:wrap}
+}
+@media(max-width:590px) {
+  .stream-toolbar-actions .stream-updated {flex:1 1 100%;text-align:right}
+}
