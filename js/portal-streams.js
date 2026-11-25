@@ -10,7 +10,7 @@
   // The monitoring source must be configured separately to cover the current ADD:ON participants.
   const API = 'https://api.adygta2.jp/streams';
   const MAX_AGE_MS = 30 * 60 * 1000;
-  const HOME_STREAM_LIMIT_DESKTOP = 5;
+  const HOME_STREAM_LIMIT_DESKTOP = 4;
   const HOME_STREAM_LIMIT_MOBILE = 4;
   const CARD_REVEAL_STEP_MS = 20;
   const counter = document.querySelector('#liveTotal');
@@ -26,6 +26,7 @@
   const filterReset = grid ? document.querySelector('#streamFilterReset') : null;
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
   const mobileHome = home ? matchMedia('(max-width: 680px)') : null;
+  const homeFooter = home ? document.querySelector('.home-stream-footer') : null;
 
   let streams = [];
   let activeFilter = 'all';
@@ -109,11 +110,20 @@
   }
 
   function renderHome(live) {
-    const limit = mobileHome?.matches ? HOME_STREAM_LIMIT_MOBILE : HOME_STREAM_LIMIT_DESKTOP;
+    const onMobile = Boolean(mobileHome?.matches);
+    const limit = onMobile ? HOME_STREAM_LIMIT_MOBILE : HOME_STREAM_LIMIT_DESKTOP;
+    const directoryCard = '<a class="home-stream-directory-card" href="streams.html" aria-label="配信一覧を見る">' +
+      '<span class="home-stream-directory-icon" aria-hidden="true">↗</span>' +
+      '<span class="home-stream-directory-title">一覧を見る</span>' +
+      '<span class="home-stream-directory-caption">配信一覧へ</span>' +
+      '</a>';
     const markup = live.length
-      ? live.slice(0, limit).map(card).join('')
+      ? live.slice(0, limit).map(card).join('') + (onMobile ? '' : directoryCard)
       : message(errorMessage || '現在配信中のメンバーはいません。', !!errorMessage);
 
+    // デスクトップは4配信 + 5枠目の一覧カード、スマホは4配信 + 下部リンク。
+    // 配信0件のときも下部の一覧リンクへ移動できるようにする。
+    if (homeFooter) homeFooter.hidden = !onMobile && live.length > 0;
     renderCards(markup, live.length > 0);
   }
 
