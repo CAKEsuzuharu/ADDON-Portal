@@ -18,6 +18,11 @@
   const refresh = document.querySelector('#refreshStreams');
   const buttons = [...document.querySelectorAll('[data-filter]')];
   const roleFilter = grid ? document.querySelector('#streamRoleFilter') : null;
+  const filterMenu = grid ? document.querySelector('#streamFilterMenu') : null;
+  const filterToggle = grid ? document.querySelector('#streamFilterToggle') : null;
+  const filterPanel = grid ? document.querySelector('#streamFilterPanel') : null;
+  const filterCount = grid ? document.querySelector('#streamFilterCount') : null;
+  const filterReset = grid ? document.querySelector('#streamFilterReset') : null;
   const directoryLink = document.querySelector('#streamDirectoryLink');
   const controls = document.querySelector('#streamControls');
   const previous = document.querySelector('#streamPrevious');
@@ -144,6 +149,27 @@
     updateHomeControls();
   }
 
+  function updateFilterIndicator() {
+    if (!filterToggle) return;
+    const count = Number(activeFilter !== 'all') + Number(Boolean(activeRole));
+    filterToggle.classList.toggle('has-active-filters', count > 0);
+    filterToggle.setAttribute('aria-label', count
+      ? `フィルター（適用中の条件 ${count}件）`
+      : 'フィルター');
+    if (filterCount) {
+      filterCount.textContent = String(count);
+      filterCount.hidden = count === 0;
+    }
+  }
+
+  function setFilterPanelOpen(open, focusTrigger = false) {
+    if (!filterPanel || !filterToggle) return;
+    filterPanel.hidden = !open;
+    filterToggle.setAttribute('aria-expanded', String(open));
+    filterMenu?.classList.toggle('is-open', open);
+    if (!open && focusTrigger) filterToggle.focus();
+  }
+
   function syncRoleFilter(allRows) {
     if (!roleFilter) return; // トップページには職業フィルタを設けない
     const roles = [...new Set(allRows.filter(platformOf).flatMap(jobRolesOf))]
@@ -158,6 +184,7 @@
     );
     roleFilter.value = roles.includes(previous) ? previous : '';
     activeRole = roleFilter.value;
+    updateFilterIndicator();
   }
 
   function render(replay = false) {
@@ -181,6 +208,7 @@
 
   roleFilter?.addEventListener('change', () => {
     activeRole = roleFilter.value;
+    updateFilterIndicator();
     render(true);
   });
 
@@ -193,8 +221,36 @@
       b.classList.toggle('is-active', selected);
       b.setAttribute('aria-pressed', String(selected));
     });
+    updateFilterIndicator();
     render(changed);
   }));
+
+  filterToggle?.addEventListener('click', () => {
+    setFilterPanelOpen(filterPanel?.hidden);
+  });
+  filterReset?.addEventListener('click', () => {
+    activeFilter = 'all';
+    activeRole = '';
+    if (roleFilter) roleFilter.value = '';
+    buttons.forEach(b => {
+      const isAll = b.dataset.filter === 'all';
+      b.classList.toggle('is-active', isAll);
+      b.setAttribute('aria-pressed', String(isAll));
+    });
+    updateFilterIndicator();
+    render(true);
+  });
+  if (filterMenu) {
+    document.addEventListener('pointerdown', event => {
+      if (!filterMenu.contains(event.target)) setFilterPanelOpen(false);
+    });
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && !filterPanel.hidden) {
+        setFilterPanelOpen(false, true);
+      }
+    });
+  }
+  updateFilterIndicator();
 
   async function update() {
     if (inFlight) return;
