@@ -417,18 +417,12 @@ body.menu-open{overflow:hidden}a{color:inherit;text-decoration:none}button{font:
 }
 
 .stream-grid-home.has-streams {
-  position: relative;
-  grid-template-columns: none;
-  grid-auto-flow: column;
-  grid-auto-columns: calc((100% - (var(--stream-columns) - 1) * var(--stream-gap)) / var(--stream-columns));
-  padding-bottom: 8px;
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  scroll-snap-type: x mandatory;
+  grid-template-columns: repeat(var(--stream-columns), minmax(0, 1fr));
+  grid-auto-flow: row;
+  grid-auto-columns: auto;
+  overflow: visible;
 }
-
-.stream-grid-home.has-streams > * {scroll-snap-align: start}
-.stream-grid-home :focus-visible {outline-offset: -3px}
+.stream-grid-home :focus-visible {outline-offset: 2px}
 
 .home-live-actions,
 .stream-controls {
@@ -1069,48 +1063,43 @@ body.menu-open{overflow:hidden}a{color:inherit;text-decoration:none}button{font:
 }
 
 
-/* HOME STREAM DIRECTORY CTA */
-/* カルーセルを横に送らなくても、セクション見出しから配信一覧へ移動可能。 */
-.home-live-actions #streamDirectoryLink {
+/* HOME STREAM GRID DIRECTORY CTA */
+.home-stream-footer {
+  display:flex;
+  justify-content:center;
+  margin-top:24px;
+}
+.home-stream-more {
   display:inline-flex;
   align-items:center;
-  justify-content:space-between;
-  gap:12px;
-  min-height:44px;
-  margin:0;
-  padding:9px 12px 9px 14px;
+  justify-content:center;
+  gap:24px;
+  width:min(100%,240px);
+  min-height:46px;
+  padding:11px 20px;
   border:1px solid var(--line-strong);
   border-radius:var(--radius);
-  background:rgba(121,204,59,.065);
+  background:rgba(121,204,59,.055);
   color:#d9e9d1;
   font-size:12px;
   font-weight:800;
-  line-height:1.3;
-  transition:border-color .2s ease,background .2s ease,color .2s ease;
+  line-height:1.35;
+  transition:border-color .2s ease,background .2s ease,color .2s ease,transform .2s ease;
 }
-.home-live-actions #streamDirectoryLink > span {
+.home-stream-more > span {
   color:var(--green-soft);
-  font-size:17px;
+  font-size:19px;
   line-height:1;
 }
-.home-live-actions #streamDirectoryLink:is(:hover,:focus-visible) {
-  border-color:rgba(121,204,59,.58);
-  background:rgba(121,204,59,.13);
+.home-stream-more:is(:hover,:focus-visible) {
+  border-color:rgba(121,204,59,.56);
+  background:rgba(121,204,59,.12);
   color:#fff;
 }
 @media(max-width:680px) {
-  .home-live .section-heading {
-    flex-wrap:wrap;
-    align-items:center;
-    row-gap:12px;
-  }
-  .home-live-actions {
-    margin-left:auto;
-    justify-content:flex-end;
-  }
-  .home-live-actions #streamDirectoryLink {
-    min-height:42px;
-    padding:8px 11px 8px 12px;
-    gap:8px;
-  }
+  .home-stream-footer {margin-top:19px}
+  .home-stream-more {width:100%;min-height:44px}
+}
+@media(prefers-reduced-motion:no-preference) {
+  .home-stream-more:hover {transform:translateY(-1px)}
 }
