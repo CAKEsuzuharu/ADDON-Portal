@@ -9,6 +9,7 @@
   // The same live monitoring API as ADYGTA2; no duplicate polling Worker/cron here.
   // The monitoring source must be configured separately to cover the current ADD:ON participants.
   const API = 'https://api.adygta2.jp/streams';
+  const JOB_ROLES_URL = 'data/streamer-roles.json';
   const MAX_AGE_MS = 30 * 60 * 1000;
   const HOME_STREAM_LIMIT = 8;
   const CARD_REVEAL_STEP_MS = 20;
@@ -27,6 +28,18 @@
   let activeFilter = 'all';
   let errorMessage = '';
   let inFlight = false;
+  let rolesByStreamer = new Map();
+  let rolesVersion = '';
+  let rolesFetching = false;
+  const roleKey = (name, platform) =>
+    String(platform || '').trim().toLowerCase() + ':' +
+    String(name || '').normalize('NFKC').trim().toLocaleLowerCase('ja-JP');
+  const jobRolesOf = (s, platform) => {
+    const fromSheet = rolesByStreamer.get(roleKey(s.name || s.channel, platform));
+    const fromApi = Array.isArray(s.roles) ? s.roles : [];
+    return (fromSheet || fromApi).filter(x => typeof x === 'string' && x.trim()).slice(0, 15);
+  };
+
 
   const esc = value => String(value ?? '').replace(/[&<>"']/g, ch => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
@@ -53,9 +66,13 @@
     const viewers = number(s.viewers).toLocaleString('ja-JP');
     const delay = Math.min(index, 12) * CARD_REVEAL_STEP_MS;
     const thumb = img ? `<img src="${esc(img)}" alt="" loading="lazy" decoding="async">` : '';
+    const roles = jobRolesOf(s, platform);
+    const jobLabels = roles.length
+      ? `<div class="stream-roles" aria-label="ゲーム内の職業">${roles.map(role => `<span class="stream-role">${esc(role)}</span>`).join('')}</div>`
+      : '';
     const inner = `<div class="stream-image">${thumb}<span class="stream-live">LIVE</span></div>` +
       `<div class="stream-info"><span class="stream-platform">${platform === 'youtube' ? 'YOUTUBE' : 'TWITCH'}</span>` +
-      `<h3>${name}</h3><p>${title}</p><small>${viewers}人が視聴中</small></div>`;
+      `<h3>${name}</h3>${jobLabels}<p>${title}</p><small>${viewers}人が視聴中</small></div>`;
     return url
       ? `<a class="stream-card" style="--stream-delay: ${delay}ms" href="${esc(url)}" target="_blank" rel="noopener noreferrer">${inner}</a>`
       : `<article class="stream-card" style="--stream-delay: ${delay}ms">${inner}</article>`;
@@ -201,7 +218,41 @@
     }
   }
 
-  refresh?.addEventListener('click', update);
-  update();
-  setInterval(() => { if (!document.hidden) update(); }, 90000);
+  // Role metadata is independent from the live monitoring API.
+  // A failed or unavailable roles feed must never hide LIVE cards.
+  async function loadJobRoles() {
+    if (rolesFetching) return;
+    rolesFetching = true;
+    try {
+      const response = await fetch(JOB_ROLES_URL, {cache: 'no-store'});
+      if (!response.ok) return;
+      const payload = await response.json();
+      if (!Array.isArray(payload?.streamers)) return;
+      const next = new Map();
+      for (const entry of payload.streamers) {
+        if (!entry || !Array.isArray(entry.roles)) continue;
+        if (entry.platform !== 'youtube' && entry.platform !== 'twitch') continue;
+        const roles = entry.roles.filter(role => typeof role === 'string' && role.trim()).slice(0, 15);
+        if (roles.length) next.set(roleKey(entry.name, entry.platform), roles);
+      }
+      const version = JSON.stringify([...next]);
+      if (version !== rolesVersion) {
+        rolesByStreamer = next;
+        rolesVersion = version;
+        render();
+      }
+    } catch {
+      // Retain the latest known role metadata on a temporary CSV/Pages failure.
+    } finally {
+      rolesFetching = false;
+    }
+  }
+  refresh?.addEventListener('click', () => { void update().then(loadJobRoles); });
+  void update().then(loadJobRoles);
+  setInterval(() => {
+    if (!document.hidden) {
+      void update();
+      void loadJobRoles();
+    }
+  }, 90000);
 })();
