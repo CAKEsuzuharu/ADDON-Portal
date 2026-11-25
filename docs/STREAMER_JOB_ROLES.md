@@ -19,12 +19,12 @@ Example for one streamer:
 | rolesSourceSpreadsheetUrl | https://docs.google.com/spreadsheets/d/YOUR_SOURCE_ID/edit |
 | rolesSourceSheetName | ZERO |
 | rolesSourceNameColumn | B |
-| rolesSourceDiscordIdColumn | C |
-| rolesSourceHeaderRow | 1 |
+| rolesSourceDiscordColumn | D |
+| rolesSourceDiscordLookup | username |\n| rolesSourceHeaderRow | 1 |
 | rolesGuildId | YOUR_DISCORD_GUILD_ID |
 | rolesRoleIds | JOB_ROLE_ID_1,JOB_ROLE_ID_2 |
 
-Change the example source Discord ID column to the actual column. The supplied
+For the current ADD:ON participant info sheet, column D is a Discord **username**, not a numerical user ID. Use `rolesSourceDiscordLookup=username` and enable the Discord `GuildMembers` intent in both the Bot and Developer Portal. Leave `rolesEnabled=FALSE` until guild ID, role IDs and credentials have been configured. The supplied
 integration module must be installed in an already-running discord.js v14 Bot;
 the Bot needs a Google service account with READ permission for the source
 sheet and EDIT permission for the sheet containing `streamers`/`settings`.
