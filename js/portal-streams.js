@@ -68,7 +68,7 @@
     const roles = jobRolesOf(s);
     const jobLabels = roles.map(role => `<span class="stream-role" title="職業: ${esc(role)}">${esc(roleDisplayName(role))}</span>`).join('');
     const inner = `<div class="stream-image">${thumb}<span class="stream-live">LIVE</span></div>` +
-      `<div class="stream-info"><div class="stream-meta"><span class="stream-platform">${platform === 'youtube' ? 'YOUTUBE' : 'TWITCH'}</span>${jobLabels}</div>` +
+      `<div class="stream-info"><div class="stream-meta"><span class="stream-platform">${platform === 'youtube' ? 'Youtube' : 'Twitch'}</span>${jobLabels}</div>` +
       `<h3>${name}</h3><p>${title}</p><small>${viewers}人が視聴中</small></div>`;
     const cardClass = `stream-card stream-card--${platform}`;
     return url
